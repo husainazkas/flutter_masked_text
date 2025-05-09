@@ -1,4 +1,4 @@
-library flutter_masked_text3;
+library flutter_masked_text4;
 
 import 'package:flutter/material.dart';
 
