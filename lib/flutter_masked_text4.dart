@@ -2,6 +2,11 @@ library flutter_masked_text4;
 
 import 'package:flutter/material.dart';
 
+typedef MaskedBeforeChangeHandler = bool Function(String previous, String next);
+typedef MaskedAfterChangeHandler = void Function(String previous, String next);
+typedef MoneyMaskedBeforeChangeHandler = void Function(
+    String maskedValue, double rawValue);
+
 class MaskedTextController extends TextEditingController {
   MaskedTextController(
       {String? text, this.mask, Map<String, RegExp>? translator})
@@ -25,8 +30,8 @@ class MaskedTextController extends TextEditingController {
 
   late Map<String, RegExp> translator;
 
-  Function afterChange = (String previous, String next) {};
-  Function beforeChange = (String previous, String next) {
+  MaskedAfterChangeHandler afterChange = (String previous, String next) {};
+  MaskedBeforeChangeHandler beforeChange = (String previous, String next) {
     return true;
   };
 
@@ -73,7 +78,7 @@ class MaskedTextController extends TextEditingController {
   String _applyMask(String? mask, String value) {
     String result = '';
 
-    if(mask == null) {
+    if (mask == null) {
       return value;
     }
 
@@ -135,7 +140,7 @@ class MoneyMaskedTextController extends TextEditingController {
     _validateConfig();
 
     this.addListener(() {
-      this.updateValue(this.numberValue ?? initialValue);
+      this.updateValue(this.numberValue);
       this.afterChange(this.text, this.numberValue);
     });
 
@@ -148,7 +153,8 @@ class MoneyMaskedTextController extends TextEditingController {
   final String leftSymbol;
   final int precision;
 
-  Function afterChange = (String maskedValue, double rawValue) {};
+  MoneyMaskedBeforeChangeHandler afterChange =
+      (String maskedValue, double rawValue) {};
 
   double _lastValue = 0.0;
 
@@ -180,16 +186,16 @@ class MoneyMaskedTextController extends TextEditingController {
     }
   }
 
-  double? get numberValue {
+  double get numberValue {
     List<String> parts =
         _getOnlyNumbers(this.text).split('').toList(growable: true);
 
-    parts.insert(parts.length - precision, '.');
+    if (parts.length >= precision) parts.insert(parts.length - precision, '.');
 
-    return double.tryParse(parts.join());
+    return double.tryParse(parts.join()) ?? 0;
   }
 
-  _validateConfig() {
+  void _validateConfig() {
     bool rightSymbolHasNumbers = _getOnlyNumbers(this.rightSymbol).length > 0;
 
     if (rightSymbolHasNumbers) {
